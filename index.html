@@ -26,7 +26,7 @@
         .hidden { display: none !important; }
 
         /* Екран 1: Кнопка */
-        #btn-screen {
+        #btn-screen, #gift-btn-screen {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -46,6 +46,22 @@
             transition: transform 0.2s;
         }
         .action-btn:hover { transform: scale(1.1); }
+
+        /* Екран 1.5: Відео */
+        #video-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: black;
+        }
+        #intro-video {
+            max-width: 90%;
+            max-height: 90vh;
+            border: 3px solid white;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
 
         /* Екран 2: Тітри */
         #credits-screen {
@@ -121,7 +137,7 @@
             margin-top: 10px;
         }
 
-        /* Екран 3.5: МІНІ-ГРА (Бійка з Сансом) */
+        /* Екран 3.5: МІНІ-ГРА */
         #game-screen {
             width: 100%;
             height: 100%;
@@ -144,10 +160,8 @@
             width: 16px;
             height: 16px;
             background-color: red;
-            /* Проста форма серця через кліп-пас або трансформ, зробимо просто червоний квадрат/ромб для надійності */
             transform: rotate(45deg);
         }
-        /* Для кращого вигляду серця додамо вушка */
         #heart::before, #heart::after {
             content: '';
             position: absolute;
@@ -183,6 +197,7 @@
             align-items: center;
             gap: 30px;
             padding: 20px;
+            position: relative;
         }
         .ticket-img {
             max-width: 90%;
@@ -207,6 +222,28 @@
             cursor: pointer;
             box-shadow: 0 0 15px rgba(0, 255, 102, 0.4);
         }
+        .claim-btn:disabled {
+            background-color: #444 !important;
+            color: #888 !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /* Ефект Салюту / Конфеті */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #fff;
+            position: absolute;
+            animation: fall linear forwards;
+            border-radius: 50%;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -217,6 +254,14 @@
 
     <div id="btn-screen">
         <button id="main-button" class="action-btn">натисни</button>
+    </div>
+
+    <div id="video-screen" class="hidden">
+        <video id="intro-video" src="happy.mp4"></video>
+    </div>
+
+    <div id="gift-btn-screen" class="hidden">
+        <button id="gift-button" class="action-btn" style="background-color: #ffd700; color: black; box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);">подаруночок?</button>
     </div>
 
     <div id="credits-screen" class="hidden">
@@ -260,7 +305,10 @@
 
     <script>
         const mainButton = document.getElementById('main-button');
+        const giftButton = document.getElementById('gift-button');
         const btnScreen = document.getElementById('btn-screen');
+        const videoScreen = document.getElementById('video-screen');
+        const giftBtnScreen = document.getElementById('gift-btn-screen');
         const creditsScreen = document.getElementById('credits-screen');
         const creditsContainer = document.getElementById('credits-container');
         const undertaleScreen = document.getElementById('undertale-screen');
@@ -273,13 +321,14 @@
         const finalScreen = document.getElementById('final-screen');
         const closeBtn = document.getElementById('close-btn');
 
+        const introVideo = document.getElementById('intro-video');
         const musicCool = document.getElementById('music-cool');
         const musicWth = document.getElementById('music-wth');
         const musicMini = document.getElementById('music-mini');
 
         let clickState = 0; 
 
-        // 1. Екран з кнопкою
+        // 1. Перша хитра кнопка
         mainButton.addEventListener('click', () => {
             if (clickState === 0) {
                 clickState = 1;
@@ -293,20 +342,38 @@
                     clickState = 2;
                 }, 3000);
             } else if (clickState === 2) {
-                startCredits();
+                playIntroVideo();
             }
         });
 
-        // 2. Уповільнені титри
-        function startCredits() {
+        // 1.5 Запуск твого відео
+        function playIntroVideo() {
             btnScreen.classList.add('hidden');
+            videoScreen.classList.remove('hidden');
+            introVideo.play().catch(e => console.log("Браузер заблокував автовідтворення відео"));
+            
+            // Коли відео закінчується, переходимо до кнопки "подаруночок?"
+            introVideo.onended = () => {
+                videoScreen.classList.add('hidden');
+                giftBtnScreen.classList.remove('hidden');
+            };
+        }
+
+        // 1.7 Натискання на кнопку "подаруночок?" -> запуск титрів
+        giftButton.addEventListener('click', () => {
+            giftBtnScreen.classList.add('hidden');
+            startCredits();
+        });
+
+        // 2. Уповільнені титри (50 секунд)
+        function startCredits() {
             creditsScreen.classList.remove('hidden');
             musicCool.play().catch(e => console.log("Браузер заблокував звук"));
 
             let containerHeight = creditsContainer.offsetHeight;
             let screenHeight = window.innerHeight;
             
-            let duration = 50000; // Збільшено до 50 секунд (повільніше)
+            let duration = 50000; 
             let start = null;
 
             function animateCredits(timestamp) {
@@ -333,7 +400,7 @@
             startDialogue();
         }
 
-        // 3. Діалог з Бобром (З новими репліками)
+        // 3. Діалог з Бобром
         const replica = [
             "привіт друже",
             "ти думав на цей раз ти мене не зустрінеш?",
@@ -384,12 +451,11 @@
             }
         });
 
-        // 4. САНС МІНІ-ГРА (Логіка та движок)
+        // 4. САНС МІНІ-ГРА
         let hp = 15;
         let timeLeft = 15;
         let gameInterval, spawnInterval, gameActive = false;
         
-        // Позиція серця всередині поля 400x300
         let heartX = 192; 
         let heartY = 142;
         const heartSpeed = 4;
@@ -417,11 +483,9 @@
             hpDisplay.innerText = `HP: ${hp} / 15`;
             timerDisplay.innerText = `ЧАС: ${timeLeft}s`;
             
-            // Очищення старих снарядів
             document.querySelectorAll('.bone').forEach(b => b.remove());
             updateHeartPosition();
 
-            // Таймер гри
             gameInterval = setInterval(() => {
                 timeLeft--;
                 timerDisplay.innerText = `ЧАС: ${timeLeft}s`;
@@ -430,10 +494,7 @@
                 }
             }, 1000);
 
-            // Спавн атак кожні 350мс
             spawnInterval = setInterval(spawnAttack, 350);
-
-            // Цикл оновлення рухів
             requestAnimationFrame(gameLoop);
         }
 
@@ -445,11 +506,10 @@
         function gameLoop() {
             if (!gameActive) return;
 
-            // Рух стрілочками
-            if (keys[37] && heartX > 5) heartX -= heartSpeed; // Ліво
-            if (keys[39] && heartX < 375) heartX += heartSpeed; // Право
-            if (keys[38] && heartY > 5) heartY -= heartSpeed; // Верх
-            if (keys[40] && heartY < 275) heartY += heartSpeed; // Вниз
+            if (keys[37] && heartX > 5) heartX -= heartSpeed; 
+            if (keys[39] && heartX < 375) heartX += heartSpeed; 
+            if (keys[38] && heartY > 5) heartY -= heartSpeed; 
+            if (keys[40] && heartY < 275) heartY += heartSpeed; 
 
             updateHeartPosition();
             checkCollisions();
@@ -462,16 +522,16 @@
             const bone = document.createElement('div');
             bone.classList.add('bone');
             
-            const side = Math.floor(Math.random() * 4); // Звідки летить атака
+            const side = Math.floor(Math.random() * 4); 
             let width, height, x, y, dx = 0, dy = 0;
 
-            if (side === 0) { // Зліва
+            if (side === 0) { 
                 width = 40; height = 10; x = -40; y = Math.random() * 280; dx = 4;
-            } else if (side === 1) { // Справа
+            } else if (side === 1) { 
                 width = 40; height = 10; x = 400; y = Math.random() * 280; dx = -4;
-            } else if (side === 2) { // Зверху
+            } else if (side === 2) { 
                 width = 10; height = 40; x = Math.random() * 380; y = -40; dy = 4;
-            } else { // Знизу
+            } else { 
                 width = 10; height = 40; x = Math.random() * 380; y = 300; dy = -4;
             }
 
@@ -481,7 +541,6 @@
             bone.style.top = y + 'px';
             gameBox.appendChild(bone);
 
-            // Рух снаряду
             function moveBone() {
                 if (!gameActive) { bone.remove(); return; }
                 x += dx;
@@ -489,7 +548,6 @@
                 bone.style.left = x + 'px';
                 bone.style.top = y + 'px';
 
-                // Видалення якщо вилетів за межі
                 if (x < -50 || x > 450 || y < -50 || y > 350) {
                     bone.remove();
                 } else {
@@ -501,7 +559,6 @@
 
         function checkCollisions() {
             const bones = document.querySelectorAll('.bone');
-            // Хітбокс серця (трохи менший для чесності)
             const hRect = { x: heartX, y: heartY, w: 16, h: 16 };
 
             bones.forEach(b => {
@@ -511,10 +568,9 @@
                 const bH = parseFloat(b.style.height);
 
                 if (hRect.x < bX + bW && hRect.x + hRect.w > bX && hRect.y < bY + bH && hRect.y + hRect.h > bY) {
-                    // Колізія! Зменшуємо ХП
                     hp--;
                     hpDisplay.innerText = `HP: ${hp} / 15`;
-                    b.remove(); // Видаляємо смугу після удару
+                    b.remove(); 
 
                     if (hp <= 0) {
                         endGame(false);
@@ -534,14 +590,37 @@
                 finalScreen.classList.remove('hidden');
             } else {
                 alert("Ти програв! Спробуй ще раз вижити у Бобра!");
-                initGame(); // Перезапуск якщо злили ХП
+                initGame(); 
             }
         }
 
-        // 5. Кнопка закриття
+        // 5. Ефект салюту та фінал
+        function createConfetti() {
+            const colors = ['#00ff66', '#ff0055', '#ffd700', '#00ffcc', '#ff9900', '#ff00ff'];
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's'; // 2-4 сек
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                finalScreen.appendChild(confetti);
+            }
+        }
+
         closeBtn.addEventListener('click', () => {
-            window.close();
-            alert("Все, білет твій! Тепер біжи святкувати! 🎉");
+            // Вимикаємо кнопку назавжди
+            closeBtn.disabled = true;
+            closeBtn.innerText = "ЗАБРАНО! 🎉";
+
+            // Запускаємо ефект салюту
+            createConfetti();
+
+            // Даємо подивитися на салют 4 секунди перед закриттям
+            setTimeout(() => {
+                window.close();
+                alert("Все, білет твій! Тепер біжи святкувати! 🎉");
+            }, 4000);
         });
     </script>
 </body>
