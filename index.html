@@ -25,7 +25,7 @@
         }
         .hidden { display: none !important; }
 
-        /* Екран 1: Кнопка */
+        /* Екрани з кнопками */
         #btn-screen, #gift-btn-screen {
             display: flex;
             justify-content: center;
@@ -47,8 +47,8 @@
         }
         .action-btn:hover { transform: scale(1.1); }
 
-        /* Екран 1.5: Відео */
-        #video-screen {
+        /* Відео екрани */
+        #video-screen, #final-video-screen {
             width: 100%;
             height: 100%;
             display: flex;
@@ -56,14 +56,14 @@
             align-items: center;
             background: black;
         }
-        #intro-video {
+        .main-video {
             max-width: 90%;
             max-height: 90vh;
             border: 3px solid white;
             box-shadow: 0 0 20px rgba(255,255,255,0.2);
         }
 
-        /* Екран 2: Тітри */
+        /* Тітри */
         #credits-screen {
             position: relative;
             width: 100%;
@@ -97,13 +97,15 @@
             box-shadow: 0 0 15px rgba(255,255,255,0.3);
         }
 
-        /* Екран 3: Undertale Діалог */
-        #undertale-screen {
+        /* Undertale Діалог */
+        #undertale-screen, #post-final-undertale-screen {
             width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
+            position: absolute;
+            z-index: 10;
         }
         .dialogue-box {
             width: 700px;
@@ -137,7 +139,7 @@
             margin-top: 10px;
         }
 
-        /* Екран 3.5: МІНІ-ГРА */
+        /* МІНІ-ГРА */
         #game-screen {
             width: 100%;
             height: 100%;
@@ -187,7 +189,7 @@
         #timer { color: #00ffcc; }
         #hp-display { color: #ff0055; }
 
-        /* Екран 4: Фінал */
+        /* Фінал */
         #final-screen {
             width: 100%;
             height: 100%;
@@ -230,15 +232,15 @@
             transform: none !important;
         }
 
-        /* Ефект Салюту / Конфеті */
+        /* Салют конфеті */
         .confetti {
             position: absolute;
             width: 10px;
             height: 10px;
             background-color: #fff;
-            position: absolute;
             animation: fall linear forwards;
             border-radius: 50%;
+            z-index: 5;
         }
         @keyframes fall {
             0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
@@ -257,7 +259,7 @@
     </div>
 
     <div id="video-screen" class="hidden">
-        <video id="intro-video" src="happy.mp4"></video>
+        <video id="intro-video" class="main-video" src="happy.mp4"></video>
     </div>
 
     <div id="gift-btn-screen" class="hidden">
@@ -303,6 +305,21 @@
         <button id="close-btn" class="claim-btn">ЗАБРАТИ</button>
     </div>
 
+    <div id="post-final-undertale-screen" class="hidden">
+        <div class="dialogue-box">
+            <div class="avatar-box">🦫</div>
+            <div>
+                <div id="post-final-text" class="text-box"></div>
+                <div class="hint">[ Клікни на текст, щоб читати далі ]</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="final-video-screen" class="hidden">
+        <video id="chilling-video" class="main-video" src="video.mp4" controls loop></video>
+    </div>
+
+
     <script>
         const mainButton = document.getElementById('main-button');
         const giftButton = document.getElementById('gift-button');
@@ -320,6 +337,10 @@
         const timerDisplay = document.getElementById('timer');
         const finalScreen = document.getElementById('final-screen');
         const closeBtn = document.getElementById('close-btn');
+        const postFinalScreen = document.getElementById('post-final-undertale-screen');
+        const postFinalText = document.getElementById('post-final-text');
+        const finalVideoScreen = document.getElementById('final-video-screen');
+        const chillingVideo = document.getElementById('chilling-video');
 
         const introVideo = document.getElementById('intro-video');
         const musicCool = document.getElementById('music-cool');
@@ -350,29 +371,27 @@
         function playIntroVideo() {
             btnScreen.classList.add('hidden');
             videoScreen.classList.remove('hidden');
-            introVideo.play().catch(e => console.log("Браузер заблокував автовідтворення відео"));
+            introVideo.play().catch(e => console.log("Блокування звуку браузером"));
             
-            // Коли відео закінчується, переходимо до кнопки "подаруночок?"
             introVideo.onended = () => {
                 videoScreen.classList.add('hidden');
                 giftBtnScreen.classList.remove('hidden');
             };
         }
 
-        // 1.7 Натискання на кнопку "подаруночок?" -> запуск титрів
+        // 1.7 "подаруночок?" -> титри
         giftButton.addEventListener('click', () => {
             giftBtnScreen.classList.add('hidden');
             startCredits();
         });
 
-        // 2. Уповільнені титри (50 секунд)
+        // 2. Повільні титри (50 секунд)
         function startCredits() {
             creditsScreen.classList.remove('hidden');
-            musicCool.play().catch(e => console.log("Браузер заблокував звук"));
+            musicCool.play().catch(e => console.log("Блокування звуку"));
 
             let containerHeight = creditsContainer.offsetHeight;
             let screenHeight = window.innerHeight;
-            
             let duration = 50000; 
             let start = null;
 
@@ -396,11 +415,11 @@
             creditsScreen.classList.add('hidden');
             musicCool.pause();
             undertaleScreen.classList.remove('hidden');
-            musicWth.play().catch(e => console.log("Браузер заблокував звук"));
+            musicWth.play().catch(e => console.log("Блокування звуку"));
             startDialogue();
         }
 
-        // 3. Діалог з Бобром
+        // 3. Перший діалог з Бобром
         const replica = [
             "привіт друже",
             "ти думав на цей раз ти мене не зустрінеш?",
@@ -416,11 +435,11 @@
         let currentLine = 0;
         let textTimeout;
 
-        function typeWriter(text, i, fnCallback) {
+        function typeWriter(element, text, i, fnCallback) {
             if (i < text.length) {
-                dialogueText.innerHTML = text.substring(0, i+1);
+                element.innerHTML = text.substring(0, i+1);
                 textTimeout = setTimeout(function() {
-                    typeWriter(text, i + 1, fnCallback)
+                    typeWriter(element, text, i + 1, fnCallback)
                 }, 40);
             } else if (typeof fnCallback == 'function') {
                 fnCallback();
@@ -429,7 +448,7 @@
 
         function startDialogue() {
             if (currentLine < replica.length) {
-                typeWriter(replica[currentLine], 0, function() {
+                typeWriter(dialogueText, replica[currentLine], 0, function() {
                     currentLine++;
                 });
             } else {
@@ -437,7 +456,7 @@
             }
         }
 
-        document.querySelector('.dialogue-box').addEventListener('click', () => {
+        document.querySelector('#undertale-screen .dialogue-box').addEventListener('click', () => {
             clearTimeout(textTimeout);
             if (dialogueText.innerHTML === replica[currentLine - 1]) {
                 if (currentLine < replica.length) {
@@ -455,11 +474,8 @@
         let hp = 15;
         let timeLeft = 15;
         let gameInterval, spawnInterval, gameActive = false;
-        
-        let heartX = 192; 
-        let heartY = 142;
-        const heartSpeed = 4;
-        const keys = {};
+        let heartX = 192; let heartY = 142;
+        const heartSpeed = 4; const keys = {};
 
         window.addEventListener('keydown', e => { if([37,38,39,40].includes(e.keyCode)) { e.preventDefault(); keys[e.keyCode] = true; } });
         window.addEventListener('keyup', e => { if([37,38,39,40].includes(e.keyCode)) { keys[e.keyCode] = false; } });
@@ -469,29 +485,21 @@
             musicWth.pause();
             gameScreen.classList.remove('hidden');
             musicMini.currentTime = 0;
-            musicMini.play().catch(e => console.log("Браузер заблокував звук"));
+            musicMini.play().catch(e => console.log("Блокування звуку"));
             initGame();
         }
 
         function initGame() {
-            hp = 15;
-            timeLeft = 15;
-            heartX = 192;
-            heartY = 142;
-            gameActive = true;
-            
+            hp = 15; timeLeft = 15; heartX = 192; heartY = 142; gameActive = true;
             hpDisplay.innerText = `HP: ${hp} / 15`;
             timerDisplay.innerText = `ЧАС: ${timeLeft}s`;
-            
             document.querySelectorAll('.bone').forEach(b => b.remove());
             updateHeartPosition();
 
             gameInterval = setInterval(() => {
                 timeLeft--;
                 timerDisplay.innerText = `ЧАС: ${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    endGame(true);
-                }
+                if (timeLeft <= 0) endGame(true);
             }, 1000);
 
             spawnInterval = setInterval(spawnAttack, 350);
@@ -499,21 +507,17 @@
         }
 
         function updateHeartPosition() {
-            heart.style.left = heartX + 'px';
-            heart.style.top = heartY + 'px';
+            heart.style.left = heartX + 'px'; heart.style.top = heartY + 'px';
         }
 
         function gameLoop() {
             if (!gameActive) return;
-
             if (keys[37] && heartX > 5) heartX -= heartSpeed; 
             if (keys[39] && heartX < 375) heartX += heartSpeed; 
             if (keys[38] && heartY > 5) heartY -= heartSpeed; 
             if (keys[40] && heartY < 275) heartY += heartSpeed; 
-
             updateHeartPosition();
             checkCollisions();
-
             requestAnimationFrame(gameLoop);
         }
 
@@ -521,38 +525,24 @@
             if (!gameActive) return;
             const bone = document.createElement('div');
             bone.classList.add('bone');
-            
             const side = Math.floor(Math.random() * 4); 
             let width, height, x, y, dx = 0, dy = 0;
 
-            if (side === 0) { 
-                width = 40; height = 10; x = -40; y = Math.random() * 280; dx = 4;
-            } else if (side === 1) { 
-                width = 40; height = 10; x = 400; y = Math.random() * 280; dx = -4;
-            } else if (side === 2) { 
-                width = 10; height = 40; x = Math.random() * 380; y = -40; dy = 4;
-            } else { 
-                width = 10; height = 40; x = Math.random() * 380; y = 300; dy = -4;
-            }
+            if (side === 0) { width = 40; height = 10; x = -40; y = Math.random() * 280; dx = 4; } 
+            else if (side === 1) { width = 40; height = 10; x = 400; y = Math.random() * 280; dx = -4; } 
+            else if (side === 2) { width = 10; height = 40; x = Math.random() * 380; y = -40; dy = 4; } 
+            else { width = 10; height = 40; x = Math.random() * 380; y = 300; dy = -4; }
 
-            bone.style.width = width + 'px';
-            bone.style.height = height + 'px';
-            bone.style.left = x + 'px';
-            bone.style.top = y + 'px';
+            bone.style.width = width + 'px'; bone.style.height = height + 'px';
+            bone.style.left = x + 'px'; bone.style.top = y + 'px';
             gameBox.appendChild(bone);
 
             function moveBone() {
                 if (!gameActive) { bone.remove(); return; }
-                x += dx;
-                y += dy;
-                bone.style.left = x + 'px';
-                bone.style.top = y + 'px';
-
-                if (x < -50 || x > 450 || y < -50 || y > 350) {
-                    bone.remove();
-                } else {
-                    requestAnimationFrame(moveBone);
-                }
+                x += dx; y += dy;
+                bone.style.left = x + 'px'; bone.style.top = y + 'px';
+                if (x < -50 || x > 450 || y < -50 || y > 350) bone.remove();
+                else requestAnimationFrame(moveBone);
             }
             requestAnimationFrame(moveBone);
         }
@@ -560,41 +550,27 @@
         function checkCollisions() {
             const bones = document.querySelectorAll('.bone');
             const hRect = { x: heartX, y: heartY, w: 16, h: 16 };
-
             bones.forEach(b => {
-                const bX = parseFloat(b.style.left);
-                const bY = parseFloat(b.style.top);
-                const bW = parseFloat(b.style.width);
-                const bH = parseFloat(b.style.height);
-
+                const bX = parseFloat(b.style.left); const bY = parseFloat(b.style.top);
+                const bW = parseFloat(b.style.width); const bH = parseFloat(b.style.height);
                 if (hRect.x < bX + bW && hRect.x + hRect.w > bX && hRect.y < bY + bH && hRect.y + hRect.h > bY) {
-                    hp--;
-                    hpDisplay.innerText = `HP: ${hp} / 15`;
-                    b.remove(); 
-
-                    if (hp <= 0) {
-                        endGame(false);
-                    }
+                    hp--; hpDisplay.innerText = `HP: ${hp} / 15`; b.remove(); 
+                    if (hp <= 0) endGame(false);
                 }
             });
         }
 
         function endGame(won) {
-            gameActive = false;
-            clearInterval(gameInterval);
-            clearInterval(spawnInterval);
-
+            gameActive = false; clearInterval(gameInterval); clearInterval(spawnInterval);
             if (won) {
-                gameScreen.classList.add('hidden');
-                musicMini.pause();
+                gameScreen.classList.add('hidden'); musicMini.pause();
                 finalScreen.classList.remove('hidden');
             } else {
-                alert("Ти програв! Спробуй ще раз вижити у Бобра!");
-                initGame(); 
+                alert("Ти програв! Спробуй ще раз вижити у Бобра!"); initGame(); 
             }
         }
 
-        // 5. Ефект салюту та фінал
+        // 5. Салют конфеті
         function createConfetti() {
             const colors = ['#00ff66', '#ff0055', '#ffd700', '#00ffcc', '#ff9900', '#ff00ff'];
             for (let i = 0; i < 150; i++) {
@@ -602,26 +578,69 @@
                 confetti.classList.add('confetti');
                 confetti.style.left = Math.random() * 100 + 'vw';
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's'; // 2-4 сек
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
                 confetti.style.animationDelay = Math.random() * 0.5 + 's';
                 finalScreen.appendChild(confetti);
             }
         }
 
+        // Запуск салюту і перехід до Нового діалогу з Бобром
         closeBtn.addEventListener('click', () => {
-            // Вимикаємо кнопку назавжди
             closeBtn.disabled = true;
             closeBtn.innerText = "ЗАБРАНО! 🎉";
-
-            // Запускаємо ефект салюту
             createConfetti();
 
-            // Даємо подивитися на салют 4 секунди перед закриттям
+            // Через 4 секунди після салюту ховаємо фінал та запускаємо Бобра
             setTimeout(() => {
-                window.close();
-                alert("Все, білет твій! Тепер біжи святкувати! 🎉");
+                finalScreen.classList.add('hidden');
+                postFinalScreen.classList.remove('hidden');
+                musicWth.currentTime = 0;
+                musicWth.play().catch(e => console.log("Блокування звуку"));
+                startPostFinalDialogue();
             }, 4000);
         });
+
+        // 6. ПІСЛЯФІНАЛЬНИЙ ДІАЛОГ
+        const postReplica = [
+            "братанчик...",
+            "ти не думай що це кінець",
+            "є в мене для тебе відосік",
+            "можливо сподобається",
+            "просто почилить"
+        ];
+        let postCurrentLine = 0;
+
+        function startPostFinalDialogue() {
+            if (postCurrentLine < postReplica.length) {
+                typeWriter(postFinalText, postReplica[postCurrentLine], 0, function() {
+                    postCurrentLine++;
+                });
+            } else {
+                playFinalChillingVideo();
+            }
+        }
+
+        document.querySelector('#post-final-undertale-screen .dialogue-box').addEventListener('click', () => {
+            clearTimeout(textTimeout);
+            if (postFinalText.innerHTML === postReplica[postCurrentLine - 1]) {
+                if (postCurrentLine < postReplica.length) {
+                    startPostFinalDialogue();
+                } else {
+                    playFinalChillingVideo();
+                }
+            } else {
+                postFinalText.innerHTML = postReplica[postCurrentLine - 1];
+                clearTimeout(textTimeout);
+            }
+        });
+
+        // 7. Фінальне чилове відео
+        function playFinalChillingVideo() {
+            postFinalScreen.classList.add('hidden');
+            musicWth.pause();
+            finalVideoScreen.classList.remove('hidden');
+            chillingVideo.play().catch(e => console.log("Блокування звуку"));
+        }
     </script>
 </body>
 </html>
